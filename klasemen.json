@@ -1,0 +1,50 @@
+[
+  {
+    "team": "Bulbasaur",
+    "icon": "🍃",
+    "match": 0,
+    "game_win": 0,
+    "game_lose": 0,
+    "diff_point": 0
+  },
+  {
+    "team": "Charmander",
+    "icon": "🔥",
+    "match": 0,
+    "game_win": 0,
+    "game_lose": 0,
+    "diff_point": 0
+  },
+  {
+    "team": "Squirtle",
+    "icon": "🌊",
+    "match": 0,
+    "game_win": 0,
+    "game_lose": 0,
+    "diff_point": 0
+  },
+  {
+    "team": "Machop",
+    "icon": "💪",
+    "match": 0,
+    "game_win": 0,
+    "game_lose": 0,
+    "diff_point": 0
+  },
+  {
+    "team": "Staryu",
+    "icon": "⭐",
+    "match": 0,
+    "game_win": 0,
+    "game_lose": 0,
+    "diff_point": 0
+  },
+  {
+    "team": "Mew",
+    "icon": "🩷",
+    "match": 0,
+    "game_win": 0,
+    "game_lose": 0,
+    "diff_point": 0
+  }
+]

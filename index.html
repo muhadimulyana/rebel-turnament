@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101329" />
+    <title>REBEL 1st Anniversary | Pokemon Unite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow glow-one"></div>
+    <div class="page-glow glow-two"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#pertandingan" aria-label="REBEL 1st Anniversary beranda">
+        <img class="brand-mark" src="assets/rebel-logo.jpeg" alt="Logo REBEL" />
+        <span>REBEL <b>ANNIVERSARY</b></span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a class="nav-link active" href="#pertandingan" data-section="pertandingan">Pertandingan</a>
+        <a class="nav-link" href="#klasemen" data-section="klasemen">Klasemen</a>
+        <a class="nav-link" href="#mvp" data-section="mvp">MVP</a>
+        <a class="nav-link" href="#most-kill" data-section="most-kill">Most Kill</a>
+        <a class="nav-link" href="#most-assist" data-section="most-assist">Most Assist</a>
+      </nav>
+      <button class="admin-trigger" id="admin-trigger" type="button">Admin</button>
+      <div class="live-status"><i></i> LIVE DATA</div>
+    </header>
+
+    <main class="container">
+      <div class="background-pokemon" aria-hidden="true">
+        <img class="bg-pokemon bg-pikachu" src="assets/pikachu.png" alt="" />
+        <img class="bg-pokemon bg-aegislash" src="assets/aegislash.png" alt="" />
+        <img class="bg-pokemon bg-darkrai" src="assets/darkrai.png" alt="" />
+        <img class="bg-pokemon bg-sableye" src="assets/sableye.png" alt="" />
+        <img class="bg-pokemon bg-dhelmise" src="assets/dhelmise.png" alt="" />
+      </div>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">SEASON 01 · 2026</p>
+          <h1>REBEL 1st<br /><span>Anniversary</span></h1>
+          <p class="hero-copy">Pantau perjalanan tim terbaik, hasil pertandingan, dan pemain paling bersinar di arena.</p>
+        </div>
+        <div class="hero-orb" aria-hidden="true">
+          <div class="orb-ring"></div>
+          <div class="orb-core"><img src="assets/rebel-logo.jpeg" alt="" /></div>
+          <span class="spark spark-a"></span><span class="spark spark-b"></span><span class="spark spark-c"></span>
+        </div>
+      </section>
+
+      <section class="overview" aria-label="Ringkasan turnamen">
+        <article><span>FORMAT</span><strong>League</strong></article>
+        <article><span>PARTISIPAN</span><strong id="team-count">6 Tim</strong></article>
+        <article><span>PERTANDINGAN</span><strong id="match-count">15 Match</strong></article>
+        <article><span>STATUS</span><strong class="status-text">Sedang Berjalan</strong></article>
+      </section>
+
+      <section class="live-banner" aria-label="Siaran langsung turnamen">
+        <div><p class="eyebrow">LIVE TURNAMEN</p><h2>Saksikan pertandingannya langsung</h2></div>
+        <div class="stream-links">
+          <a class="stream-link tiktok" href="https://www.tiktok.com/@volt.gim" target="_blank" rel="noopener noreferrer"><span>♪</span>TikTok</a>
+          <a class="stream-link youtube" href="https://www.youtube.com/@voltgim" target="_blank" rel="noopener noreferrer"><span>▶</span>YouTube</a>
+        </div>
+      </section>
+
+      <section class="content-section active-section" id="pertandingan">
+        <div class="section-heading">
+          <div><p class="eyebrow">JADWAL & HASIL</p><h2>Pertandingan</h2></div>
+          <div class="day-filter" id="day-filter" aria-label="Filter hari pertandingan"></div>
+        </div>
+        <div id="matches-grid" class="matches-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="content-section" id="klasemen">
+        <div class="section-heading"><div><p class="eyebrow">PERINGKAT TIM</p><h2>Klasemen</h2></div></div>
+        <div class="table-card">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>#</th><th>Tim</th><th>Match</th><th>Menang</th><th>Kalah</th><th>Diff. Poin</th></tr></thead>
+              <tbody id="standings-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="mvp">
+        <div class="section-heading"><div><p class="eyebrow">PLAYMAKER TERBAIK</p><h2>MVP Leaderboard</h2></div></div>
+        <div id="mvp-grid" class="leader-grid"></div>
+      </section>
+
+      <section class="content-section" id="most-kill">
+        <div class="section-heading"><div><p class="eyebrow">OFFENSIVE POWER</p><h2>Most Kill</h2></div></div>
+        <div id="kills-grid" class="leader-grid"></div>
+      </section>
+
+      <section class="content-section" id="most-assist">
+        <div class="section-heading"><div><p class="eyebrow">TEAM SUPPORT</p><h2>Most Assist</h2></div></div>
+        <div id="assists-grid" class="leader-grid"></div>
+      </section>
+    </main>
+
+    <dialog class="admin-dialog" id="admin-dialog" aria-labelledby="admin-title">
+      <button class="dialog-close" id="dialog-close" type="button" aria-label="Tutup">×</button>
+      <div class="login-panel" id="login-panel">
+        <p class="eyebrow">AREA TERBATAS</p>
+        <h2 id="admin-title">Login Admin</h2>
+        <p class="dialog-copy">Masuk untuk memperbarui data turnamen melalui API.</p>
+        <form id="login-form">
+          <label>Username<input id="username" name="username" autocomplete="username" required /></label>
+          <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
+          <p class="form-message" id="login-message" role="alert"></p>
+          <button class="primary-button" type="submit">Masuk ke dashboard</button>
+        </form>
+      </div>
+      <div class="update-panel" id="update-panel" hidden>
+        <p class="eyebrow">DASHBOARD ADMIN</p>
+        <h2>Update Data API</h2>
+        <p class="dialog-copy">Klasemen diperbarui otomatis oleh API setelah data dikirim.</p>
+        <div class="admin-tabs" role="tablist">
+          <button class="admin-tab active" type="button" role="tab" aria-selected="true" data-form="match-form">Pertandingan</button>
+          <button class="admin-tab" type="button" role="tab" aria-selected="false" data-form="player-form">Statistik Player</button>
+        </div>
+        <form id="match-form" class="admin-form">
+          <label>Pertandingan
+            <select id="match-id" name="matchId" required><option value="">Pilih pertandingan</option></select>
+          </label>
+          <p class="match-teams" id="match-teams">Pilih pertandingan untuk melihat tim.</p>
+          <div class="score-inputs">
+            <label id="team-one-label">Skor Tim 1<input id="team-one-score" name="teamOneScore" type="number" min="0" step="1" inputmode="numeric" required /></label>
+            <label id="team-two-label">Skor Tim 2<input id="team-two-score" name="teamTwoScore" type="number" min="0" step="1" inputmode="numeric" required /></label>
+          </div>
+          <p class="form-message" id="match-message" role="status"></p>
+          <button class="primary-button" type="submit">Update pertandingan</button>
+        </form>
+        <form id="player-form" class="admin-form" hidden aria-hidden="true">
+          <label>Match
+            <select id="player-match-id" name="playerMatchId" required><option value="">Pilih match</option></select>
+          </label>
+          <div class="player-stat-list" id="player-stat-list">
+            <p class="match-teams">Pilih match untuk menampilkan pemain yang bertanding.</p>
+          </div>
+          <p class="form-message" id="player-message" role="status"></p>
+          <button class="primary-button" id="player-submit" type="submit" disabled>Update statistik player</button>
+        </form>
+      </div>
+    </dialog>
+
+    <template id="empty-state">
+      <div class="empty-state"><span>⌁</span><p>Data belum tersedia</p><small>Leaderboard akan diperbarui saat pertandingan selesai.</small></div>
+    </template>
+    <script src="app.js"></script>
+  </body>
+</html>
