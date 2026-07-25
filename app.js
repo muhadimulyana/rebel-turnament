@@ -1,9 +1,8 @@
 const API = {
-  matches: "./matchs.json",
-  standings: "./klasemen.json",
-  players: "./players.json",
-  updateMatches: "./matchs.json",
-  updatePlayers: "./players.json",
+  baseUrl: "http://localhost:8080/api/tournament",
+  matches: "/matchs",
+  standings: "/klasemen",
+  players: "/players",
 };
 
 const emptyState = () => document.getElementById("empty-state").content.cloneNode(true);
@@ -12,10 +11,12 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&"
 let teamIcons = new Map();
 let loadedData = {};
 
-async function getJson(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Tidak dapat memuat ${url}`);
-  return response.json();
+async function getJson(path) {
+  const response = await fetch(`${API.baseUrl}${path}`);
+  if (!response.ok) throw new Error(`Tidak dapat memuat ${path}`);
+  const payload = await response.json();
+  if (!payload.success || !Array.isArray(payload.data)) throw new Error("Format respons API tidak valid.");
+  return payload.data;
 }
 
 function showMatches(matches, selectedDay) {
@@ -162,14 +163,7 @@ function setAdminPanel() {
       setMessage("match-message", "Skor tidak boleh sama karena pemenang harus ditentukan.");
       return;
     }
-    await sendUpdate("matches", {
-      match: match.match,
-      hasil: {
-        score_tim_1: scoreOne,
-        score_tim_2: scoreTwo,
-        winner: scoreOne > scoreTwo ? match.team_1 : match.team_2,
-      },
-    }, "match-message");
+    await updateMatchScore(match, scoreOne, scoreTwo);
   });
   playerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -193,10 +187,7 @@ function setAdminPanel() {
       setMessage("player-message", "Pilih maksimal satu pemain MVP untuk setiap match.");
       return;
     }
-    await sendUpdate("players", {
-      match: match.match,
-      statistics,
-    }, "player-message");
+    await updatePlayerStatistics(match.match, statistics);
   });
 }
 
@@ -282,23 +273,47 @@ function setMessage(id, text, success = false) {
   message.classList.toggle("success", success);
 }
 
-async function sendUpdate(resource, payload, messageId) {
-  setMessage(messageId, "Mengirim pembaruan...");
+async function updateMatchScore(match, scoreOne, scoreTwo) {
+  setMessage("match-message", "Mengirim pembaruan...");
   try {
-    const response = await fetch(API[`update${resource[0].toUpperCase()}${resource.slice(1)}`], {
+    const response = await fetch(`${API.baseUrl}${API.matches}/${match.match}/score`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${btoa("admin:Loco88-55")}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        score_tim_1: scoreOne,
+        score_tim_2: scoreTwo,
+        winner: scoreOne > scoreTwo ? match.team_1 : match.team_2,
+      }),
     });
-    if (!response.ok) throw new Error("Permintaan update ditolak oleh API.");
-    setMessage(messageId, "Data berhasil diperbarui. Klasemen akan disegarkan oleh API.", true);
+    const payload = await response.json();
+    if (!response.ok || !payload.success) throw new Error(payload.message || "Permintaan update ditolak oleh API.");
+    setMessage("match-message", "Skor berhasil diperbarui. Klasemen akan disegarkan oleh API.", true);
     await loadData();
     populateAdminForms();
   } catch (error) {
-    setMessage(messageId, error.message);
+    setMessage("match-message", error.message);
+  }
+}
+
+async function updatePlayerStatistics(match, statistics) {
+  setMessage("player-message", "Mengirim pembaruan statistik...");
+  try {
+    const responses = await Promise.all(statistics.map(async (statistic) => {
+      const response = await fetch(`${API.baseUrl}${API.players}/${encodeURIComponent(statistic.player)}/appearance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ match, ...statistic }),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.message || `Gagal memperbarui ${statistic.player}.`);
+    }));
+    setMessage("player-message", `${responses.length} statistik player berhasil diperbarui.`, true);
+    await loadData();
+    populateAdminForms();
+  } catch (error) {
+    setMessage("player-message", error.message);
   }
 }
 
