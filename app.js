@@ -1,5 +1,5 @@
 const API = {
-  baseUrl: "http://localhost:8080/api/tournament",
+  baseUrl: "https://demo.pandu.id/rebel-api/public/api/tournament",
   matches: "/matchs",
   standings: "/klasemen",
   players: "/players",
