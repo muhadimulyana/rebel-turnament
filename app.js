@@ -4,6 +4,9 @@ const API = {
   standings: "/klasemen",
   players: "/players",
 };
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "%Pokun26-OQ";
+const ADMIN_SESSION_KEY = "rebel-admin-authenticated";
 
 const emptyState = () => document.getElementById("empty-state").content.cloneNode(true);
 const initials = (name) => name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "PU";
@@ -129,21 +132,22 @@ function setAdminPanel() {
   const loginMessage = document.getElementById("login-message");
   const matchForm = document.getElementById("match-form");
   const playerForm = document.getElementById("player-form");
-  document.getElementById("admin-trigger").addEventListener("click", () => dialog.showModal());
+  document.getElementById("admin-trigger").addEventListener("click", () => {
+    if (localStorage.getItem(ADMIN_SESSION_KEY) === "true") showAdminDashboard(loginPanel, updatePanel);
+    dialog.showModal();
+  });
   document.getElementById("dialog-close").addEventListener("click", () => dialog.close());
   document.getElementById("login-form").addEventListener("submit", (event) => {
     event.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    if (username !== "admin" || password !== "Loco88-55") {
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
       loginMessage.textContent = "Username atau password tidak valid.";
       return;
     }
     loginMessage.textContent = "";
-    loginPanel.hidden = true;
-    updatePanel.hidden = false;
-    populateAdminForms();
-    switchAdminForm("match-form");
+    localStorage.setItem(ADMIN_SESSION_KEY, "true");
+    showAdminDashboard(loginPanel, updatePanel);
   });
   document.querySelectorAll(".admin-tab").forEach((tab) => tab.addEventListener("click", () => {
     switchAdminForm(tab.dataset.form);
@@ -189,6 +193,13 @@ function setAdminPanel() {
     }
     await updatePlayerStatistics(match.match, statistics);
   });
+}
+
+function showAdminDashboard(loginPanel, updatePanel) {
+  loginPanel.hidden = true;
+  updatePanel.hidden = false;
+  populateAdminForms();
+  switchAdminForm("match-form");
 }
 
 function switchAdminForm(formId) {
