@@ -76,7 +76,7 @@ function playerStats(players) {
     return {
       name: player.player,
       team: player.team,
-      mvp: appearances.filter((appearance) => appearance.is_mvp).length,
+      mvp: appearances.reduce((sum, appearance) => sum + Number(appearance.mvp || 0), 0),
       kills: appearances.reduce((sum, appearance) => sum + Number(appearance.kills || 0), 0),
       assists: appearances.reduce((sum, appearance) => sum + Number(appearance.assist || 0), 0),
     };
@@ -181,14 +181,10 @@ function setAdminPanel() {
       player: loadedData.players[Number(row.dataset.playerIndex)].player,
       kills: Number(row.querySelector('[name="kills"]').value),
       assist: Number(row.querySelector('[name="assists"]').value),
-      is_mvp: row.querySelector('[name="mvp"]').checked,
+      mvp: Number(row.querySelector('[name="mvp"]').value),
     }));
-    if (statistics.some((stat) => !Number.isInteger(stat.kills) || !Number.isInteger(stat.assist) || stat.kills < 0 || stat.assist < 0)) {
-      setMessage("player-message", "Semua kill dan assist harus berupa angka bulat minimal 0.");
-      return;
-    }
-    if (statistics.filter((stat) => stat.is_mvp).length > 1) {
-      setMessage("player-message", "Pilih maksimal satu pemain MVP untuk setiap match.");
+    if (statistics.some((stat) => !Number.isInteger(stat.kills) || !Number.isInteger(stat.assist) || !Number.isInteger(stat.mvp) || stat.kills < 0 || stat.assist < 0 || stat.mvp < 0)) {
+      setMessage("player-message", "Kill, assist, dan MVP harus berupa angka bulat minimal 0.");
       return;
     }
     await updatePlayerStatistics(match.match, statistics);
@@ -272,7 +268,7 @@ function renderMatchPlayers() {
         <span class="player-stat-name">${escapeHtml(teamIcons.get(player.team) || "")} ${escapeHtml(player.player)}</span>
         <label>Kill<input name="kills" type="number" min="0" step="1" inputmode="numeric" required value="${Number(appearance.kills || 0)}" /></label>
         <label>Assist<input name="assists" type="number" min="0" step="1" inputmode="numeric" required value="${Number(appearance.assist || 0)}" /></label>
-        <label class="mvp-toggle"><input name="mvp" type="checkbox" ${appearance.is_mvp ? "checked" : ""} /> MVP</label>
+        <label>MVP<input name="mvp" type="number" min="0" step="1" inputmode="numeric" required value="${Number(appearance.mvp || 0)}" /></label>
       </div>`);
   });
   submit.disabled = false;
