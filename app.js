@@ -3,10 +3,12 @@ const API = {
   matches: "/matchs",
   standings: "/klasemen",
   players: "/players",
+  playerStatisticsImportPath: "/matchs/{match}/players/import",
 };
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "%Pokun26-OQ";
 const ADMIN_SESSION_KEY = "rebel-admin-authenticated";
+const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 const emptyState = () => document.getElementById("empty-state").content.cloneNode(true);
 const initials = (name) => name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "PU";
@@ -132,6 +134,8 @@ function setAdminPanel() {
   const loginMessage = document.getElementById("login-message");
   const matchForm = document.getElementById("match-form");
   const playerForm = document.getElementById("player-form");
+  const playerManualForm = document.getElementById("player-manual-form");
+  const playerImportForm = document.getElementById("player-import-form");
   document.getElementById("admin-trigger").addEventListener("click", () => {
     if (localStorage.getItem(ADMIN_SESSION_KEY) === "true") showAdminDashboard(loginPanel, updatePanel);
     dialog.showModal();
@@ -152,8 +156,13 @@ function setAdminPanel() {
   document.querySelectorAll(".admin-tab").forEach((tab) => tab.addEventListener("click", () => {
     switchAdminForm(tab.dataset.form);
   }));
+  document.querySelectorAll(".player-stat-tab").forEach((tab) => tab.addEventListener("click", () => {
+    switchPlayerStatisticMode(tab.dataset.playerMode);
+  }));
   document.getElementById("match-id").addEventListener("change", showSelectedMatch);
   document.getElementById("player-match-id").addEventListener("change", renderMatchPlayers);
+  document.getElementById("player-import-match-id").addEventListener("change", showImportSelectedMatch);
+  document.getElementById("player-import-file").addEventListener("change", validateSelectedImportFile);
   matchForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const match = findMatch(document.getElementById("match-id").value);
@@ -169,7 +178,7 @@ function setAdminPanel() {
     }
     await updateMatchScore(match, scoreOne, scoreTwo);
   });
-  playerForm.addEventListener("submit", async (event) => {
+  playerManualForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const match = findMatch(document.getElementById("player-match-id").value);
     const rows = [...document.querySelectorAll(".player-stat-row")];
@@ -188,6 +197,21 @@ function setAdminPanel() {
       return;
     }
     await updatePlayerStatistics(match.match, statistics);
+  });
+  playerImportForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const match = findMatch(document.getElementById("player-import-match-id").value);
+    const file = document.getElementById("player-import-file").files[0];
+    clearImportErrors();
+    if (!match) {
+      setMessage("player-import-message", "Pilih match sebelum mengunggah file.");
+      return;
+    }
+    if (!isExcelFile(file)) {
+      setMessage("player-import-message", "Pilih file Excel berformat .xlsx.");
+      return;
+    }
+    await importPlayerStatistics(match.match, file);
   });
 }
 
@@ -222,8 +246,10 @@ function populateAdminForms() {
   const matchOptions = matches.map((match) => `<option value="${match.match}">Match ${match.match} · ${escapeHtml(match.team_1)} vs ${escapeHtml(match.team_2)}</option>`).join("");
   document.getElementById("match-id").innerHTML = `<option value="">Pilih pertandingan</option>${matchOptions}`;
   document.getElementById("player-match-id").innerHTML = `<option value="">Pilih match</option>${matchOptions}`;
+  document.getElementById("player-import-match-id").innerHTML = `<option value="">Pilih match</option>${matchOptions}`;
   showSelectedMatch();
   renderMatchPlayers();
+  showImportSelectedMatch();
 }
 
 function showSelectedMatch() {
@@ -274,6 +300,57 @@ function renderMatchPlayers() {
   submit.disabled = false;
 }
 
+function switchPlayerStatisticMode(mode) {
+  const showingManual = mode === "manual";
+  const manualPanel = document.getElementById("player-manual-panel");
+  const importPanel = document.getElementById("player-import-panel");
+  manualPanel.hidden = !showingManual;
+  importPanel.hidden = showingManual;
+  manualPanel.setAttribute("aria-hidden", String(!showingManual));
+  importPanel.setAttribute("aria-hidden", String(showingManual));
+  manualPanel.querySelectorAll("input, select, button").forEach((element) => {
+    element.disabled = !showingManual || (element.id === "player-submit" && !document.querySelectorAll(".player-stat-row").length);
+  });
+  importPanel.querySelectorAll("input, select, button").forEach((element) => {
+    element.disabled = showingManual;
+  });
+  document.querySelectorAll(".player-stat-tab").forEach((tab) => {
+    const active = tab.dataset.playerMode === mode;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+}
+
+function showImportSelectedMatch() {
+  const match = findMatch(document.getElementById("player-import-match-id").value);
+  const teamText = document.getElementById("player-import-match-teams");
+  teamText.textContent = match
+    ? `${teamIcons.get(match.team_1) || ""} ${match.team_1} vs ${teamIcons.get(match.team_2) || ""}`
+    : "Pilih match untuk memastikan tim pada file sesuai.";
+}
+
+function isExcelFile(file) {
+  return Boolean(file)
+    && /\.xlsx$/i.test(file.name)
+    && (!file.type || file.type === XLSX_MIME_TYPE || file.type === "application/octet-stream");
+}
+
+function validateSelectedImportFile() {
+  const input = document.getElementById("player-import-file");
+  const file = input.files[0];
+  clearImportErrors();
+  if (!file) {
+    setMessage("player-import-message", "");
+    return;
+  }
+  if (!isExcelFile(file)) {
+    input.value = "";
+    setMessage("player-import-message", "File harus berformat Excel .xlsx.");
+    return;
+  }
+  setMessage("player-import-message", `File ${file.name} siap diunggah.`, true);
+}
+
 function setMessage(id, text, success = false) {
   const message = document.getElementById(id);
   message.textContent = text;
@@ -321,6 +398,86 @@ async function updatePlayerStatistics(match, statistics) {
     populateAdminForms();
   } catch (error) {
     setMessage("player-message", error.message);
+  }
+}
+
+function getPayloadMessage(payload, fallback) {
+  return typeof payload?.message === "string" && payload.message.trim() ? payload.message : fallback;
+}
+
+function formatImportError(error) {
+  if (typeof error === "string" || typeof error === "number") return String(error);
+  if (!error || typeof error !== "object") return "Kesalahan validasi tidak dapat dibaca.";
+  const row = error.row ?? error.row_number ?? error.line;
+  const name = error.name ?? error.player;
+  const team = error.team;
+  const message = error.message ?? error.error ?? error.reason;
+  const context = [
+    row !== undefined && row !== null ? `Baris ${row}` : "",
+    name ? `Pemain: ${name}` : "",
+    team ? `Tim: ${team}` : "",
+  ].filter(Boolean);
+  if (typeof message === "string") return [...context, message].join(" - ");
+  const fields = Object.entries(error)
+    .filter(([, value]) => typeof value === "string" || typeof value === "number")
+    .map(([field, value]) => `${field}: ${value}`);
+  return fields.length ? fields.join(" - ") : context.join(" - ") || "Kesalahan validasi tidak dapat dibaca.";
+}
+
+function clearImportErrors() {
+  const list = document.getElementById("player-import-errors");
+  list.replaceChildren();
+  list.hidden = true;
+}
+
+function showImportErrors(errors) {
+  const entries = Array.isArray(errors) ? errors : errors ? [errors] : [];
+  if (!entries.length) return;
+  const list = document.getElementById("player-import-errors");
+  entries.forEach((error) => {
+    if (error && typeof error === "object" && !Array.isArray(error) && !("message" in error) && !("error" in error) && !("reason" in error) && !("row" in error) && !("row_number" in error)) {
+      Object.entries(error).forEach(([field, value]) => {
+        (Array.isArray(value) ? value : [value]).forEach((item) => {
+          const line = document.createElement("li");
+          line.textContent = `${field}: ${formatImportError(item)}`;
+          list.append(line);
+        });
+      });
+      return;
+    }
+    const line = document.createElement("li");
+    line.textContent = formatImportError(error);
+    list.append(line);
+  });
+  list.hidden = !list.childElementCount;
+}
+
+async function importPlayerStatistics(match, file) {
+  const submit = document.getElementById("player-import-submit");
+  submit.disabled = true;
+  setMessage("player-import-message", "Mengunggah dan memvalidasi file Excel...");
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const path = API.playerStatisticsImportPath.replace("{match}", encodeURIComponent(match));
+    const response = await fetch(`${API.baseUrl}${path}`, {
+      method: "POST",
+      body: formData,
+    });
+    const contentType = response.headers.get("content-type") || "";
+    const payload = contentType.includes("json") ? await response.json() : {};
+    if (!response.ok || !payload.success) {
+      showImportErrors(payload?.report?.errors || payload?.errors || payload?.data?.errors);
+      throw new Error(getPayloadMessage(payload, "Import statistik ditolak oleh API."));
+    }
+    document.getElementById("player-import-form").reset();
+    setMessage("player-import-message", getPayloadMessage(payload, "Statistik player berhasil diimpor."), true);
+    await loadData();
+    populateAdminForms();
+  } catch (error) {
+    setMessage("player-import-message", error instanceof Error ? error.message : "Import statistik gagal.");
+  } finally {
+    submit.disabled = false;
   }
 }
 
