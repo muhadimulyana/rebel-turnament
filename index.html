@@ -135,16 +135,39 @@
           <p class="form-message" id="match-message" role="status"></p>
           <button class="primary-button" type="submit">Update pertandingan</button>
         </form>
-        <form id="player-form" class="admin-form" hidden aria-hidden="true">
-          <label>Match
-            <select id="player-match-id" name="playerMatchId" required><option value="">Pilih match</option></select>
-          </label>
-          <div class="player-stat-list" id="player-stat-list">
-            <p class="match-teams">Pilih match untuk menampilkan pemain yang bertanding.</p>
+        <div id="player-form" class="admin-form" hidden aria-hidden="true">
+          <div class="player-stat-tabs" role="tablist" aria-label="Mode input statistik player">
+            <button class="player-stat-tab active" type="button" role="tab" aria-selected="true" data-player-mode="manual">Input manual</button>
+            <button class="player-stat-tab" type="button" role="tab" aria-selected="false" data-player-mode="import">Import Excel</button>
           </div>
-          <p class="form-message" id="player-message" role="status"></p>
-          <button class="primary-button" id="player-submit" type="submit" disabled>Update statistik player</button>
-        </form>
+          <div id="player-manual-panel">
+            <form id="player-manual-form">
+              <label>Match
+                <select id="player-match-id" name="playerMatchId" required><option value="">Pilih match</option></select>
+              </label>
+              <div class="player-stat-list" id="player-stat-list">
+                <p class="match-teams">Pilih match untuk menampilkan pemain yang bertanding.</p>
+              </div>
+              <p class="form-message" id="player-message" role="status"></p>
+              <button class="primary-button" id="player-submit" type="submit" disabled>Update statistik player</button>
+            </form>
+          </div>
+          <div id="player-import-panel" hidden aria-hidden="true">
+            <form id="player-import-form">
+              <p class="import-guide">Unggah file Excel (.xlsx) dengan kolom: Nama, Tim, Kill, Assist, MVP. Data akan divalidasi oleh server sebelum disimpan.</p>
+              <label>Match
+                <select id="player-import-match-id" name="playerImportMatchId" required disabled><option value="">Pilih match</option></select>
+              </label>
+              <p class="match-teams" id="player-import-match-teams">Pilih match untuk memastikan tim pada file sesuai.</p>
+              <label>File Excel (.xlsx)
+                <input id="player-import-file" name="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required disabled />
+              </label>
+              <p class="form-message" id="player-import-message" role="status"></p>
+              <ul class="import-errors" id="player-import-errors" hidden aria-live="assertive"></ul>
+              <button class="primary-button" id="player-import-submit" type="submit" disabled>Import statistik player</button>
+            </form>
+          </div>
+        </div>
       </div>
     </dialog>
 
